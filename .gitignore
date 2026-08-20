@@ -1,0 +1,32 @@
+# Environment / secrets
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local data / logs
+*.log
+data/*.csv
+data/*.db
+
+# Build spec (personal working doc, not part of the project deliverable)
+DATABASE_ANALYST_AGENT_BUILD_INSTRUCTIONS*.md
