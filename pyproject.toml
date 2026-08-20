@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "database-analyst-agent"
+version = "0.1.0"
+description = "Agentic natural-language-to-SQL analyst for PostgreSQL"
+requires-python = ">=3.11"
+
+[tool.setuptools]
+packages = ["app", "app.agent", "app.tools", "app.database", "app.services"]
