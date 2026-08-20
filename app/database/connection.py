@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from contextlib import contextmanager
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -45,3 +45,18 @@ def get_readonly_session() -> Iterator[Session]:
         yield session
     finally:
         session.close()
+
+
+def check_connection(target: Engine | None = None) -> tuple[bool, str | None]:
+    """Cheap liveness probe. Returns (is_healthy, error_message).
+
+    Used by the UI/agent to fail with a clear "database unavailable" message
+    instead of letting a raw connection error surface mid-request.
+    """
+    engine_to_check = target or readonly_engine
+    try:
+        with engine_to_check.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return True, None
+    except Exception as exc:
+        return False, str(exc)
