@@ -11,10 +11,22 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 from sqlalchemy.engine import Engine
 
 from app.database.connection import readonly_engine
+
+# Cardinality cap for treating a text column as categorical at all. 60 admits
+# things like US state abbreviations (59 distinct values in this dataset)
+# while still excluding genuinely near-unique columns like city (2,700+) or
+# email -- the cap itself is what tells them apart, no name-based guessing.
+SAMPLE_VALUE_CARDINALITY_CAP = 60
+
+# How many example values actually get printed in the prompt once a column
+# passes the cardinality check. The LLM only needs enough examples to learn
+# the *format* (e.g. "state" is 2-letter abbreviations, not full names) --
+# printing all 59 states would just be token bloat for no added signal.
+SAMPLE_VALUE_DISPLAY_LIMIT = 10
 
 TABLE_BUSINESS_CONTEXT: dict[str, str] = {
     "customers": "People who place orders. One row per customer.",
@@ -48,6 +60,7 @@ class ColumnInfo:
     type: str
     nullable: bool
     primary_key: bool
+    sample_values: list[str] | None = None
 
 
 @dataclass(frozen=True)
@@ -58,20 +71,41 @@ class TableInfo:
     foreign_keys: list[str] = field(default_factory=list)  # "col -> other_table.other_col"
 
 
+def _sample_distinct_values(engine: Engine, table: str, column: str) -> list[str] | None:
+    """Distinct values for a text column, if there are few enough to be
+    genuinely categorical (state, status, payment_method, ...) rather than
+    near-unique (name, email, sku). Returns None when there are too many.
+    """
+    query = text(f'SELECT DISTINCT "{column}" FROM "{table}" LIMIT :cap').bindparams(
+        cap=SAMPLE_VALUE_CARDINALITY_CAP + 1
+    )
+    with engine.connect() as conn:
+        values = [row[0] for row in conn.execute(query) if row[0] is not None]
+    if len(values) > SAMPLE_VALUE_CARDINALITY_CAP:
+        return None
+    return sorted(values)
+
+
 def _inspect_tables(engine: Engine = readonly_engine) -> list[TableInfo]:
     inspector = inspect(engine)
     tables: list[TableInfo] = []
     for table_name in sorted(inspector.get_table_names()):
         pk_cols = set(inspector.get_pk_constraint(table_name).get("constrained_columns") or [])
-        columns = [
-            ColumnInfo(
-                name=col["name"],
-                type=str(col["type"]),
-                nullable=col["nullable"],
-                primary_key=col["name"] in pk_cols,
+        columns = []
+        for col in inspector.get_columns(table_name):
+            is_text_type = str(col["type"]).upper().startswith(("VARCHAR", "CHARACTER VARYING", "TEXT"))
+            sample_values = None
+            if is_text_type and col["name"] not in pk_cols:
+                sample_values = _sample_distinct_values(engine, table_name, col["name"])
+            columns.append(
+                ColumnInfo(
+                    name=col["name"],
+                    type=str(col["type"]),
+                    nullable=col["nullable"],
+                    primary_key=col["name"] in pk_cols,
+                    sample_values=sample_values,
+                )
             )
-            for col in inspector.get_columns(table_name)
-        ]
         foreign_keys = [
             f"{fk['constrained_columns'][0]} -> {fk['referred_table']}.{fk['referred_columns'][0]}"
             for fk in inspector.get_foreign_keys(table_name)
@@ -101,6 +135,10 @@ def format_table(table: TableInfo) -> str:
             markers.append("PK")
         if not col.nullable:
             markers.append("NOT NULL")
+        if col.sample_values:
+            shown = col.sample_values[:SAMPLE_VALUE_DISPLAY_LIMIT]
+            suffix = f", +{len(col.sample_values) - len(shown)} more" if len(col.sample_values) > len(shown) else ""
+            markers.append("values: " + ", ".join(repr(v) for v in shown) + suffix)
         marker_str = f"  -- {', '.join(markers)}" if markers else ""
         lines.append(f"    {col.name} {col.type},{marker_str}")
     if table.foreign_keys:
