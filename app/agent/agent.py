@@ -164,6 +164,7 @@ def build_agent_executor(state: RunState) -> AgentExecutor:
 class AgentAnswer:
     answer: str
     sql: str | None
+    validation_passed: bool | None
     execution: ExecutionResult | None
     analysis: AnalysisSummary | None
     chart: Figure | None
@@ -178,6 +179,7 @@ def ask(question: str) -> AgentAnswer:
     return AgentAnswer(
         answer=result["output"],
         sql=state.sql,
+        validation_passed=state.validation_passed,
         execution=state.execution,
         analysis=state.analysis,
         chart=state.chart,
