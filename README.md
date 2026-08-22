@@ -495,6 +495,4 @@ Database-analyst-agent/
 
 The `app/` package contains the core agent, database, service, and tool logic, while the Streamlit application is maintained separately under `frontend/`.
 
-Development-only documentation is intentionally excluded from the public repository.
-
 ---
