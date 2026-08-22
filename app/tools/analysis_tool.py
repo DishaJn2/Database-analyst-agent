@@ -18,6 +18,18 @@ from decimal import Decimal
 # native DATE/TIMESTAMP columns already arrive as real date/datetime objects.
 _DATE_LIKE_PATTERN = re.compile(r"^\d{4}(-\d{2}){0,2}$")
 
+# Matches "id", "customer_id", "order_id", etc. An identifier is numeric but
+# not a *measure* -- ranking or averaging by customer_id is meaningless, and
+# treating it as one previously caused a real bug: a "top customers by spend"
+# query got ranked by customer_id instead of total_spent, because it was the
+# first numeric column and customer_id happened to come before the real
+# measure in the SELECT list.
+_ID_LIKE_PATTERN = re.compile(r"(^id$|_id$)", re.IGNORECASE)
+
+
+def _is_id_like(column: str) -> bool:
+    return bool(_ID_LIKE_PATTERN.search(column))
+
 
 @dataclass(frozen=True)
 class ColumnStats:
@@ -74,7 +86,9 @@ def _classify_columns(columns: list[str], rows: list[dict]) -> tuple[list[str], 
         return [], None
 
     sample = rows[0]
-    numeric_columns = [c for c in columns if _to_float(sample.get(c)) is not None]
+    numeric_columns = [
+        c for c in columns if not _is_id_like(c) and _to_float(sample.get(c)) is not None
+    ]
     period_column = next(
         (c for c in columns if c not in numeric_columns and _is_period_like(sample.get(c))),
         None,
@@ -104,7 +118,12 @@ def analyze_result(rows: list[dict], columns: list[str], top_n: int = 5) -> Anal
         )
 
     top_entries: list[TopEntry] = []
-    label_column = next((c for c in columns if c not in numeric_columns), None)
+    # Prefer a real, non-id label (e.g. first_name over customer_id); fall back
+    # to an id-like column only if nothing else is available to label rows with.
+    label_candidates = [c for c in columns if c not in numeric_columns]
+    label_column = next((c for c in label_candidates if not _is_id_like(c)), None) or (
+        label_candidates[0] if label_candidates else None
+    )
     if label_column and numeric_columns and len(rows) > 1:
         primary_measure = numeric_columns[0]
         ranked = sorted(

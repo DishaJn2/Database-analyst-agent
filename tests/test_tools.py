@@ -120,6 +120,28 @@ def test_should_visualize_false_for_single_aggregate() -> None:
     assert build_chart(summary) is None
 
 
+def test_analyze_result_does_not_rank_by_id_column() -> None:
+    # Real bug: a "top customers by spend" result includes customer_id (numeric
+    # but not a measure) ahead of total_spent in column order. Ranking by the
+    # first numeric column would rank by customer_id instead of by dollars.
+    rows = [
+        {"customer_id": 824, "first_name": "Jason", "total_spent": 39832.24},
+        {"customer_id": 1680, "first_name": "Dale", "total_spent": 34517.60},
+        {"customer_id": 2054, "first_name": "Michael", "total_spent": 33734.97},
+    ]
+    columns = ["customer_id", "first_name", "total_spent"]
+    summary = analyze_result(rows, columns)
+    assert [s.column for s in summary.numeric_stats] == ["total_spent"]
+    assert [e.label for e in summary.top_entries] == ["Jason", "Dale", "Michael"]
+    assert [e.value for e in summary.top_entries] == [39832.24, 34517.60, 33734.97]
+
+
+def test_analyze_result_falls_back_to_id_label_when_no_other_column_exists() -> None:
+    rows = [{"store_id": 1, "revenue": 500.0}, {"store_id": 2, "revenue": 300.0}]
+    summary = analyze_result(rows, columns=["store_id", "revenue"])
+    assert [e.label for e in summary.top_entries] == ["1", "2"]
+
+
 def test_should_visualize_true_for_ranking_and_chart_builds() -> None:
     rows = [{"category_name": "Electronics", "revenue": 500.0}, {"category_name": "Grocery", "revenue": 100.0}]
     summary = analyze_result(rows=rows, columns=["category_name", "revenue"])
