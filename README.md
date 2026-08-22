@@ -57,7 +57,7 @@ This separation allows the system to benefit from LLM reasoning without giving t
 
 ## Demo
 
-The Streamlit interface provides a conversational environment where users can ask analytical questions in plain English.
+The Streamlit interface provides a conversational environment where users can ask analytical questions in plain English and receive grounded insights directly from the database.
 
 For each question, the system can provide:
 
@@ -69,7 +69,23 @@ For each question, the system can provide:
 ### Application Interface
 
 <p align="center">
-  <img src="assets/database-analyst-agent-demo.png" alt="Database Analyst Agent Demo" width="900"/>
+  <img src="assets/database-analyst-agent-demo.png" alt="Database Analyst Agent Interface" width="900"/>
+</p>
+
+### Query Analysis
+
+The agent converts natural-language questions into validated SQL, executes them safely, and returns the generated query alongside the analysis.
+
+<p align="center">
+  <img src="assets/query-analysis-demo.png" alt="SQL Query Analysis Demo" width="900"/>
+</p>
+
+### Data Visualization
+
+When query results are suitable for visualization, the system can automatically generate a chart to make the results easier to interpret.
+
+<p align="center">
+  <img src="assets/visualization-demo.png" alt="Database Analyst Agent Visualization" width="900"/>
 </p>
 
 ---
@@ -93,10 +109,10 @@ For each question, the system can provide:
 ## Architecture
 
 <p align="center">
-  <img src="assets/architecture.png" alt="Database Analyst Agent Architecture" width="750"/>
+  <img src="assets/architecture.png" alt="Database Analyst Agent Architecture" width="850"/>
 </p>
 
-The system separates **LLM reasoning** from **database safety and deterministic computation**.
+The architecture separates **LLM reasoning** from **database safety and deterministic computation**.
 
 The LLM is responsible for:
 
@@ -113,7 +129,7 @@ Deterministic components are responsible for:
 * Numerical analysis
 * Visualization selection
 
-This ensures that database safety does not depend on the behavior of the LLM.
+This separation ensures that database safety does not depend on the behavior of the LLM.
 
 ---
 
@@ -286,8 +302,6 @@ Schema introspection was enhanced to provide representative values for suitable 
 
 This gives the LLM additional grounding without placing the entire database contents in the prompt.
 
----
-
 ### 2. Hallucination from Partial Results
 
 **Challenge:**
@@ -297,8 +311,6 @@ Returning only a small sample of trend results could cause the LLM to describe p
 Trend and ranking analysis now provides the actual underlying values required to construct the answer.
 
 Important numerical calculations are handled deterministically rather than relying entirely on LLM arithmetic.
-
----
 
 ### 3. Free-Tier LLM Availability
 
@@ -408,7 +420,7 @@ DATABASE_URL=postgresql://username:password@localhost:5432/database_name
 GROQ_API_KEY=your_groq_api_key
 ```
 
-> Never commit your actual `.env` file or API keys to GitHub.
+> **Important:** Never commit your actual `.env` file or API keys to GitHub.
 
 ### 5. Create and Seed the Database
 
@@ -473,7 +485,9 @@ Database-analyst-agent/
 │
 ├── assets/
 │   ├── architecture.png
-│   └── database-analyst-agent-demo.png
+│   ├── database-analyst-agent-demo.png
+│   ├── query-analysis-demo.png
+│   └── visualization-demo.png
 │
 ├── .env.example
 ├── .gitignore
@@ -489,5 +503,12 @@ Development-only documentation is intentionally excluded from the public reposit
 
 ---
 
+## Author
+
+**Disha Jain**
+
+B.Tech Computer Science & Engineering
+
+---
 
 If you find this project useful or interesting, consider giving the repository a ⭐.
