@@ -29,7 +29,6 @@ An **agentic natural-language-to-SQL analyst for PostgreSQL**. Ask a business qu
 * [Getting Started](#getting-started)
 * [Testing](#testing)
 * [Project Structure](#project-structure)
-* [Author](#author)
 
 ---
 
