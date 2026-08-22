@@ -31,4 +31,4 @@ data/*.db
 # Build spec (personal working doc, not part of the project deliverable)
 DATABASE_ANALYST_AGENT_BUILD_INSTRUCTIONS*.md
 
-docs
+docs/
