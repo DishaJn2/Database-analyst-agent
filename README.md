@@ -502,13 +502,3 @@ The `app/` package contains the core agent, database, service, and tool logic, w
 Development-only documentation is intentionally excluded from the public repository.
 
 ---
-
-## Author
-
-**Disha Jain**
-
-B.Tech Computer Science & Engineering
-
----
-
-If you find this project useful or interesting, consider giving the repository a ⭐.
