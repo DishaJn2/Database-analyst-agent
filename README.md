@@ -57,35 +57,22 @@ This separation allows the system to benefit from LLM reasoning without giving t
 
 ## Demo
 
-The Streamlit interface provides a conversational environment where users can ask analytical questions in plain English and receive grounded insights directly from the database.
+The Streamlit interface allows users to ask analytical questions in natural language and receive grounded answers, validated SQL, execution results, and visualizations when appropriate.
 
-For each question, the system can provide:
+### Natural Language to SQL Analysis
 
-* A grounded natural-language answer
-* Generated and validated SQL
-* Database execution results
-* Automatic visualization when appropriate
-
-### Application Interface
+The agent interprets the user's question, generates and validates SQL, executes it against PostgreSQL, and returns the result with execution details.
 
 <p align="center">
-  <img src="assets/database-analyst-agent-demo.png" alt="Database Analyst Agent Interface" width="900"/>
+  <img src="assets/database-analyst-agent-demo.png" alt="Natural Language to SQL Analysis" width="900"/>
 </p>
 
-### Query Analysis
+### Analysis with Visualization
 
-The agent converts natural-language questions into validated SQL, executes them safely, and returns the generated query alongside the analysis.
-
-<p align="center">
-  <img src="assets/query-analysis-demo.png" alt="SQL Query Analysis Demo" width="900"/>
-</p>
-
-### Data Visualization
-
-When query results are suitable for visualization, the system can automatically generate a chart to make the results easier to interpret.
+For analytical queries where a visual representation is useful, the agent returns the query result along with an automatically generated chart.
 
 <p align="center">
-  <img src="assets/visualization-demo.png" alt="Database Analyst Agent Visualization" width="900"/>
+  <img src="assets/query-analysis-demo.png" alt="Database Analysis with Visualization" width="900"/>
 </p>
 
 ---
